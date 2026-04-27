@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// The base URL for our backend API
-const API_URL = 'http://localhost:5000/api/tasks';
+// The base URL for our backend API (Production)
+const API_URL = 'https://assignment-8-lswb.onrender.com/api/tasks';
 
 const todoApi = {
   // Get all tasks, optionally with a search term
