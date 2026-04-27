@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/tasks';
+const API_URL = 'https://assignment-8-lswb.onrender.com/api/tasks';
 
 const todoApi = {
   getAllTasks: async (search = '') => {
