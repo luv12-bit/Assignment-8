@@ -1,169 +1,170 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle, Circle, Search, Loader2, ClipboardList } from 'lucide-react';
 import todoApi from './api/todoApi';
 import './App.css';
 
 function App() {
+  // 1. State management - keeping it simple with basic hooks
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [search, setSearch] = useState('');
+  
+  // States for feedback
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [validationError, setValidationError] = useState('');
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
+  // 2. Fetching tasks from the backend
   const fetchTasks = async (query = '') => {
     setLoading(true);
+    console.log('--- Fetching Tasks ---');
     try {
       const data = await todoApi.getAllTasks(query);
+      console.log('Received data from backend:', data);
       setTasks(data);
-      setError(null);
+      setErrorMessage('');
     } catch (err) {
-      setError('Connection failed. Please check if your backend is running.');
-      console.error(err);
+      setErrorMessage(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (e) => {
-    const val = e.target.value;
-    setSearch(val);
-    fetchTasks(val);
-  };
+  // Run on mount
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
-  const addTask = async (e) => {
+  // 3. Handling form submission with validation
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    
+    // Simple validation check
+    if (title.length < 3) {
+      setValidationError('Task title must be at least 3 characters long');
+      return;
+    }
+
+    console.log('--- Creating New Task ---');
+    console.log('Task Data:', { title, description });
 
     try {
       const newTask = await todoApi.createTask({ title, description });
+      console.log('Task created successfully:', newTask);
+      
+      // Update local state without fetching everything again
       setTasks([newTask, ...tasks]);
+      
+      // Reset form
       setTitle('');
       setDescription('');
-      setError(null);
+      setValidationError('');
     } catch (err) {
-      setError('Failed to add task. Please try again.');
+      setErrorMessage(err.message);
     }
   };
 
-  const toggleStatus = async (id, currentStatus) => {
+  // 4. Updating status using the new dedicated API
+  const handleToggleStatus = async (id, currentStatus) => {
+    console.log(`--- Toggling Status for Task ID: ${id} ---`);
     try {
-      const updated = await todoApi.updateTask(id, { isDone: !currentStatus });
-      setTasks(tasks.map(t => t._id === id ? updated : t));
+      const updatedTask = await todoApi.updateStatus(id, !currentStatus);
+      console.log('Status updated:', updatedTask);
+      
+      // Update our local array to reflect the change
+      const newTasks = tasks.map(t => t._id === id ? updatedTask : t);
+      setTasks(newTasks);
     } catch (err) {
-      setError('Failed to update status.');
+      setErrorMessage(err.message);
     }
   };
 
-  const deleteTask = async (id) => {
+  // 5. Deleting a task
+  const handleDelete = async (id) => {
+    console.log(`--- Deleting Task ID: ${id} ---`);
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+
     try {
       await todoApi.deleteTask(id);
+      console.log('Task deleted from server');
+      
+      // Remove from local list
       setTasks(tasks.filter(t => t._id !== id));
     } catch (err) {
-      setError('Failed to delete task.');
+      setErrorMessage(err.message);
     }
+  };
+
+  // 6. Handling search input
+  const onSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    console.log('Searching for:', value);
+    fetchTasks(value); // Trigger search on every keystroke
   };
 
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>Task Master</h1>
-        <p>Your ultimate workspace for getting things done.</p>
-      </header>
+    <div className="container">
+      <h1>My To-Do List</h1>
+      
+      {/* Search Section */}
+      <div className="search-section">
+        <input 
+          type="text" 
+          placeholder="Search your tasks..." 
+          value={search}
+          onChange={onSearchChange}
+        />
+      </div>
 
-      <main className="app-content">
-        <section className="task-form-card">
-          <form onSubmit={addTask}>
-            <div className="input-group">
-              <input
-                type="text"
-                placeholder="What's on your mind?"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </div>
-            <div className="input-group">
-              <textarea
-                placeholder="Add some details... (optional)"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <button type="submit" className="add-btn">
-              <Plus size={22} strokeWidth={3} />
-              <span>Create Task</span>
-            </button>
-          </form>
-        </section>
+      {/* Form Section */}
+      <div className="form-card">
+        <h3>Add New Task</h3>
+        <form onSubmit={handleSubmit}>
+          <input 
+            type="text" 
+            placeholder="What needs to be done?" 
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          {validationError && <p className="validation-text">{validationError}</p>}
+          
+          <textarea 
+            placeholder="Description (optional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          
+          <button type="submit">Add Task</button>
+        </form>
+      </div>
 
-        <section className="task-list-section">
-          <div className="list-controls">
-            <div className="search-box">
-              <Search size={20} />
-              <input
-                type="text"
-                placeholder="Filter your tasks..."
-                value={search}
-                onChange={handleSearch}
-              />
-            </div>
-            <div className="task-count">
-              {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
-            </div>
-          </div>
+      {/* List Section */}
+      <div className="list-section">
+        {errorMessage && <p className="error-box">{errorMessage}</p>}
+        {loading && <p>Loading your tasks...</p>}
+        
+        {!loading && tasks.length === 0 && <p>No tasks found. Try adding one!</p>}
 
-          {error && <div className="error-message">{error}</div>}
-
-          {loading ? (
-            <div className="loader">
-              <Loader2 className="spin" size={48} />
-              <p>Syncing with your database...</p>
-            </div>
-          ) : (
-            <div className="task-list">
-              {tasks.length === 0 ? (
-                <div className="empty-state">
-                  <ClipboardList size={64} strokeWidth={1} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                  <p>{search ? 'No matches found for your search.' : 'Your list is empty. Take a breath and add a task!'}</p>
+        <div className="task-items">
+          {tasks.map(task => (
+            <div key={task._id} className={`task-card ${task.isDone ? 'done' : ''}`}>
+              <div className="task-content">
+                <input 
+                  type="checkbox" 
+                  checked={task.isDone} 
+                  onChange={() => handleToggleStatus(task._id, task.isDone)}
+                />
+                <div className="text">
+                  <h4>{task.title}</h4>
+                  <p>{task.description}</p>
                 </div>
-              ) : (
-                tasks.map((task, index) => (
-                  <div 
-                    key={task._id} 
-                    className={`task-item ${task.isDone ? 'completed' : ''}`}
-                    style={{ animationDelay: `${index * 0.05}s` }}
-                  >
-                    <div className="task-info">
-                      <button 
-                        className="status-btn"
-                        onClick={() => toggleStatus(task._id, task.isDone)}
-                      >
-                        {task.isDone ? (
-                          <CheckCircle size={28} className="done-icon" fill="currentColor" />
-                        ) : (
-                          <Circle size={28} strokeWidth={1.5} />
-                        )}
-                      </button>
-                      <div className="text-content">
-                        <h3>{task.title}</h3>
-                        {task.description && <p>{task.description}</p>}
-                      </div>
-                    </div>
-                    <button className="delete-btn" onClick={() => deleteTask(task._id)}>
-                      <Trash2 size={22} />
-                    </button>
-                  </div>
-                ))
-              )}
+              </div>
+              <button className="del-btn" onClick={() => handleDelete(task._id)}>Delete</button>
             </div>
-          )}
-        </section>
-      </main>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

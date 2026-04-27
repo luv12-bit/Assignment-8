@@ -1,28 +1,48 @@
 const Task = require('../models/Task');
 
-class TaskService {
-  async getAllTasks(search = '') {
-    const query = search 
-      ? { title: { $regex: search, $options: 'i' } } 
-      : {};
-    return await Task.find(query).sort({ createdAt: -1 });
+// This service handles all our database interactions using Mongoose
+const getAllTasks = async (searchQuery) => {
+  // If there's a search term, we use a regex (regular expression) 
+  // to find titles that contain that term. 'i' means case-insensitive.
+  let query = {};
+  if (searchQuery) {
+    query = { title: { $regex: searchQuery, $options: 'i' } };
   }
+  
+  // We sort by createdAt: -1 to show the newest tasks first
+  console.log('Fetching tasks with query:', query);
+  return await Task.find(query).sort({ createdAt: -1 });
+};
 
-  async createTask(taskData) {
-    const task = new Task(taskData);
-    return await task.save();
-  }
+const createTask = async (data) => {
+  // Just taking the title and description and saving them
+  const newTask = new Task(data);
+  return await newTask.save();
+};
 
-  async updateTask(id, updateData) {
-    return await Task.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-  }
+const updateTaskContent = async (id, data) => {
+  // This updates the title or description
+  return await Task.findByIdAndUpdate(id, data, { new: true });
+};
 
-  async deleteTask(id) {
-    return await Task.findByIdAndDelete(id);
-  }
-}
+// NEW: Dedicated function for just updating the status
+const updateTaskStatus = async (id, isDone) => {
+  console.log(`Updating task ${id} status to: ${isDone}`);
+  return await Task.findByIdAndUpdate(
+    id, 
+    { isDone: isDone }, 
+    { new: true } // This returns the updated document instead of the old one
+  );
+};
 
-module.exports = new TaskService();
+const deleteTask = async (id) => {
+  return await Task.findByIdAndDelete(id);
+};
+
+module.exports = {
+  getAllTasks,
+  createTask,
+  updateTaskContent,
+  updateTaskStatus,
+  deleteTask
+};

@@ -1,16 +1,45 @@
-# React + Vite
+# To-Do List Frontend (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Welcome to the frontend of our To-Do List app! This part of the project is built with **React** (using Vite) and handles all the user interactions.
 
-Currently, two official plugins are available:
+## Prerequisites
+Before you start, make sure you have:
+- **Node.js** installed on your computer.
+- The **Backend server** running (see the backend folder for instructions).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Setup Instructions
 
-## React Compiler
+1. **Install Dependencies**:
+   Open your terminal in this folder and run:
+   ```bash
+   npm install
+   ```
+   This installs React, Axios (for API calls), and other needed tools.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Backend Connection**:
+   The app is configured to look for the backend at `http://localhost:5000`. Make sure your backend is running on that port!
 
-## Expanding the ESLint configuration
+3. **How to Run**:
+   Start the development server with:
+   ```bash
+   npm run dev
+   ```
+   The terminal will give you a link (like `http://localhost:5173`). Open it in your browser!
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Expected Features
+- **Add Tasks**: Type a title and description and click "Add Task".
+- **Validation**: You must enter at least 3 characters for the title.
+- **View List**: All your tasks are fetched from the MongoDB database.
+- **Search**: Use the search bar to filter your tasks by title in real-time.
+- **Toggle Status**: Click the checkbox to mark a task as done. This uses our dedicated `/status` API.
+- **Delete**: Click the "Delete" button to remove a task forever.
+
+## How it Works (Data Flow)
+1. **App.jsx**: This is our main component. It holds the "state" (the list of tasks).
+2. **todoApi.js**: This is a helper file that uses **Axios** to talk to our Node.js server.
+3. **Fetching**: When the page loads, `useEffect` triggers `fetchTasks()`, which calls the backend and updates the state.
+4. **Console Logs**: I've added `console.log` statements throughout the code. Open your browser's "Developer Tools" (F12) and check the "Console" tab to see the data moving!
+
+## Troubleshooting
+- **List is empty?** Check if your backend is running and connected to MongoDB.
+- **API Errors?** Make sure you haven't changed the port in the backend without updating it in `todoApi.js`.
