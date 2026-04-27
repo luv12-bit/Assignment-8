@@ -87,11 +87,18 @@ textarea {
   width: 100%;
   padding: 1.2rem 1.5rem;
   border-radius: 1.2rem;
-  border: 1px solid rgba(0,0,0,0.05);
-  background: white;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a; /* Dark navy for maximum visibility */
   font-size: 1rem;
   font-family: inherit;
+  font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="text"]::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
 }
 
 input[type="text"]:focus,
