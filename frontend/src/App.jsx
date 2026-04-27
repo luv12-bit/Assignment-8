@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle, Circle, Search, Loader2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Circle, Search, Loader2, ClipboardList } from 'lucide-react';
 import todoApi from './api/todoApi';
 import './App.css';
 
@@ -22,7 +22,7 @@ function App() {
       setTasks(data);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch tasks. Make sure the server is running.');
+      setError('Connection failed. Please check if your backend is running.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -44,8 +44,9 @@ function App() {
       setTasks([newTask, ...tasks]);
       setTitle('');
       setDescription('');
+      setError(null);
     } catch (err) {
-      setError('Failed to add task.');
+      setError('Failed to add task. Please try again.');
     }
   };
 
@@ -54,7 +55,7 @@ function App() {
       const updated = await todoApi.updateTask(id, { isDone: !currentStatus });
       setTasks(tasks.map(t => t._id === id ? updated : t));
     } catch (err) {
-      setError('Failed to update task.');
+      setError('Failed to update status.');
     }
   };
 
@@ -71,7 +72,7 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <h1>Task Master</h1>
-        <p>Stay organized, stay productive.</p>
+        <p>Your ultimate workspace for getting things done.</p>
       </header>
 
       <main className="app-content">
@@ -80,7 +81,7 @@ function App() {
             <div className="input-group">
               <input
                 type="text"
-                placeholder="What needs to be done?"
+                placeholder="What's on your mind?"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -88,13 +89,14 @@ function App() {
             </div>
             <div className="input-group">
               <textarea
-                placeholder="Description (optional)"
+                placeholder="Add some details... (optional)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
             <button type="submit" className="add-btn">
-              <Plus size={20} /> Add Task
+              <Plus size={22} strokeWidth={3} />
+              <span>Create Task</span>
             </button>
           </form>
         </section>
@@ -102,10 +104,10 @@ function App() {
         <section className="task-list-section">
           <div className="list-controls">
             <div className="search-box">
-              <Search size={18} />
+              <Search size={20} />
               <input
                 type="text"
-                placeholder="Search tasks..."
+                placeholder="Filter your tasks..."
                 value={search}
                 onChange={handleSearch}
               />
@@ -119,24 +121,33 @@ function App() {
 
           {loading ? (
             <div className="loader">
-              <Loader2 className="spin" size={40} />
-              <p>Loading tasks...</p>
+              <Loader2 className="spin" size={48} />
+              <p>Syncing with your database...</p>
             </div>
           ) : (
             <div className="task-list">
               {tasks.length === 0 ? (
                 <div className="empty-state">
-                  <p>No tasks found. Start by adding one above!</p>
+                  <ClipboardList size={64} strokeWidth={1} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                  <p>{search ? 'No matches found for your search.' : 'Your list is empty. Take a breath and add a task!'}</p>
                 </div>
               ) : (
-                tasks.map(task => (
-                  <div key={task._id} className={`task-item ${task.isDone ? 'completed' : ''}`}>
+                tasks.map((task, index) => (
+                  <div 
+                    key={task._id} 
+                    className={`task-item ${task.isDone ? 'completed' : ''}`}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
                     <div className="task-info">
                       <button 
                         className="status-btn"
                         onClick={() => toggleStatus(task._id, task.isDone)}
                       >
-                        {task.isDone ? <CheckCircle size={24} className="done-icon" /> : <Circle size={24} />}
+                        {task.isDone ? (
+                          <CheckCircle size={28} className="done-icon" fill="currentColor" />
+                        ) : (
+                          <Circle size={28} strokeWidth={1.5} />
+                        )}
                       </button>
                       <div className="text-content">
                         <h3>{task.title}</h3>
@@ -144,7 +155,7 @@ function App() {
                       </div>
                     </div>
                     <button className="delete-btn" onClick={() => deleteTask(task._id)}>
-                      <Trash2 size={20} />
+                      <Trash2 size={22} />
                     </button>
                   </div>
                 ))
